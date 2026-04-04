@@ -1,0 +1,49 @@
+-- Forge Stealer Joiner
+local PlaceId = tonumber(getgenv().PLACEID) or game.PlaceId
+local JobId = getgenv().JOBID or ""
+local User = getgenv().USER or ""
+
+if JobId == "" then
+    warn("No JobId provided!")
+    return
+end
+
+if game.PlaceId ~= PlaceId then
+    queue_on_teleport([[
+        task.wait(3)
+        if game.JobId ~= "]] .. JobId .. [[" then
+            game:GetService("TeleportService"):TeleportToPlaceInstance(]] .. PlaceId .. [[, "]] .. JobId .. [[")
+            task.wait(5)
+            if "]] .. User .. [[" ~= "" then
+                pcall(function()
+                    local commF = game:GetService("ReplicatedStorage"):FindFirstChild("Remotes") and game:GetService("ReplicatedStorage").Remotes:FindFirstChild("CommF_")
+                    if commF then
+                        commF:InvokeServer("Chat", "/w ]] .. User .. [[ im here")
+                    end
+                end)
+            end
+        end
+    ]])
+    
+    local commF = game:GetService("ReplicatedStorage"):FindFirstChild("Remotes") and game:GetService("ReplicatedStorage").Remotes:FindFirstChild("CommF_")
+    if commF then
+        if PlaceId == 4442272183 then
+            commF:InvokeServer("TravelDressrosa")
+        elseif PlaceId == 7449423635 then
+            commF:InvokeServer("TravelZou")
+        end
+    else
+        game:GetService("TeleportService"):Teleport(PlaceId)
+    end
+else
+    game:GetService("TeleportService"):TeleportToPlaceInstance(PlaceId, JobId)
+    task.wait(5)
+    if User ~= "" then
+        pcall(function()
+            local commF = game:GetService("ReplicatedStorage"):FindFirstChild("Remotes") and game:GetService("ReplicatedStorage").Remotes:FindFirstChild("CommF_")
+            if commF then
+                commF:InvokeServer("Chat", "/w " .. User .. " im here")
+            end
+        end)
+    end
+end
