@@ -1,49 +1,70 @@
--- Forge Stealer Joiner
+-- CUSTOM JOINER - Made by theniceguyim
 local PlaceId = tonumber(getgenv().PLACEID) or game.PlaceId
 local JobId = getgenv().JOBID or ""
 local User = getgenv().USER or ""
 
-if JobId == "" then
-    warn("No JobId provided!")
+if JobId == "" or JobId == nil then
+    warn("[Joiner] No JobId provided!")
     return
 end
 
-if game.PlaceId ~= PlaceId then
-    queue_on_teleport([[
-        task.wait(3)
-        if game.JobId ~= "]] .. JobId .. [[" then
-            game:GetService("TeleportService"):TeleportToPlaceInstance(]] .. PlaceId .. [[, "]] .. JobId .. [[")
-            task.wait(5)
-            if "]] .. User .. [[" ~= "" then
-                pcall(function()
-                    local commF = game:GetService("ReplicatedStorage"):FindFirstChild("Remotes") and game:GetService("ReplicatedStorage").Remotes:FindFirstChild("CommF_")
-                    if commF then
-                        commF:InvokeServer("Chat", "/w ]] .. User .. [[ im here")
-                    end
-                end)
-            end
+print("[Joiner] Target PlaceId: " .. PlaceId)
+print("[Joiner] Target JobId: " .. JobId)
+
+local function sendChat(msg)
+    pcall(function()
+        local ReplicatedStorage = game:GetService("ReplicatedStorage")
+        local Remotes = ReplicatedStorage:FindFirstChild("Remotes")
+        local CommF = Remotes and Remotes:FindFirstChild("CommF_")
+        if CommF then
+            CommF:InvokeServer("Chat", msg)
         end
-    ]])
+    end)
+end
+
+local TeleportService = game:GetService("TeleportService")
+local lp = game:GetService("Players").LocalPlayer
+
+-- If we're in wrong sea, travel first
+if game.PlaceId ~= PlaceId then
+    print("[Joiner] Wrong sea, traveling...")
     
-    local commF = game:GetService("ReplicatedStorage"):FindFirstChild("Remotes") and game:GetService("ReplicatedStorage").Remotes:FindFirstChild("CommF_")
-    if commF then
+    -- Queue the join AFTER teleport
+    if queue_on_teleport then
+        queue_on_teleport([[
+            task.wait(3)
+            local TeleportService = game:GetService("TeleportService")
+            local lp = game:GetService("Players").LocalPlayer
+            TeleportService:TeleportToPlaceInstance(]] .. PlaceId .. [[, "]] .. JobId .. [[", lp)
+            task.wait(5)
+            local ReplicatedStorage = game:GetService("ReplicatedStorage")
+            local Remotes = ReplicatedStorage:FindFirstChild("Remotes")
+            local CommF = Remotes and Remotes:FindFirstChild("CommF_")
+            if CommF and "]] .. User .. [[" ~= "" then
+                CommF:InvokeServer("Chat", "/w ]] .. User .. [[ im here")
+            end
+        ]])
+    end
+    
+    -- Travel to correct sea
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local Remotes = ReplicatedStorage:FindFirstChild("Remotes")
+    local CommF = Remotes and Remotes:FindFirstChild("CommF_")
+    
+    if CommF then
         if PlaceId == 4442272183 then
-            commF:InvokeServer("TravelDressrosa")
+            CommF:InvokeServer("TravelDressrosa")
         elseif PlaceId == 7449423635 then
-            commF:InvokeServer("TravelZou")
+            CommF:InvokeServer("TravelZou")
         end
     else
-        game:GetService("TeleportService"):Teleport(PlaceId)
+        TeleportService:Teleport(PlaceId)
     end
 else
-    game:GetService("TeleportService"):TeleportToPlaceInstance(PlaceId, JobId)
+    print("[Joiner] Already in correct sea, joining...")
+    TeleportService:TeleportToPlaceInstance(PlaceId, JobId, lp)
     task.wait(5)
     if User ~= "" then
-        pcall(function()
-            local commF = game:GetService("ReplicatedStorage"):FindFirstChild("Remotes") and game:GetService("ReplicatedStorage").Remotes:FindFirstChild("CommF_")
-            if commF then
-                commF:InvokeServer("Chat", "/w " .. User .. " im here")
-            end
-        end)
+        sendChat("/w " .. User .. " im here")
     end
 end
